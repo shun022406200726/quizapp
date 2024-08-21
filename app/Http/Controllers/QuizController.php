@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Quiz;
 use Illuminate\Http\Request;
 
 class QuizController extends Controller
@@ -13,7 +14,9 @@ class QuizController extends Controller
      */
     public function index()
     {
-        return view('quizzes.index');
+        return view('quizzes.index',[
+            'quizzes'=>Quiz::all(),
+        ]);
     }
 
     /**
@@ -34,7 +37,7 @@ class QuizController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $validateData=$request->validate([
             'question'=>'required|max:255',
             'answer_a'=>'required|max:255',
             'answer_b'=>'required|max:255',
@@ -43,7 +46,21 @@ class QuizController extends Controller
             'correct_answer'=>'required|in:A,B,C,D',
             'explanation'=>'max:65535',
         ]);
-        return view('quizzes.index');
+
+        $Quiz =new Quiz;
+
+        $Quiz->question=$validateData['question'];
+        $Quiz->answer_a=$validateData['answer_a'];
+        $Quiz->answer_b=$validateData['answer_b'];
+        $Quiz->answer_c=$validateData['answer_c'];
+        $Quiz->answer_d=$validateData['answer_d'];
+        $Quiz->correct_answer=$validateData['correct_answer'];
+        $Quiz->explanation=$validateData['explanation'];
+
+        $Quiz->save();
+
+
+        return redirect(route('quizzes.index'));
     }
 
     /**
@@ -54,7 +71,9 @@ class QuizController extends Controller
      */
     public function show($id)
     {
-        return view('quizzes.show');
+        return view('quizzes.show',[
+            'quiz'=>Quiz::find($id),
+        ]);
     }
 
     /**
@@ -88,6 +107,12 @@ class QuizController extends Controller
      */
     public function destroy($id)
     {
-        return json_encode(['message'=>'ID:'.$id.'が削除']);
+        if (!Quiz::destroy($id)) {
+            return response()->json([
+                'message'=>'Failed to Delete',
+            ],400);
         }
+
+        return response()->noContent();
+    }
 }
